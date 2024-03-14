@@ -1,60 +1,76 @@
+// App.js
 import React, { useState, useEffect } from 'react';
 import logo from './logo.png';
 import './App.css';
 
-
 function App() {
   const [unreadMessages, setUnreadMessages] = useState(0);
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-  if (isMobile) {
-    // Listen for beforeinstallprompt event
-    window.addEventListener('beforeinstallprompt', (event) => {
-      // Prevent the default install prompt
-      event.preventDefault();
-
-      // Show a custom install prompt to the user
-      // For example, display a button or message to install the app
-      const installButton = document.getElementById('install-button');
-      installButton.style.display = 'block';
-
-      // Handle user interaction with the install prompt
-      installButton.addEventListener('click', () => {
-        // Show the browser's install prompt
-        event.prompt();
-
-        // Wait for the user to interact with the install prompt
-        event.userChoice.then((choiceResult) => {
-          if (choiceResult.outcome === 'accepted') {
-            console.log('User accepted the install prompt');
-          } else {
-            console.log('User dismissed the install prompt');
-          }
-
-          // Hide the install button after user interaction
-          installButton.style.display = 'none';
-        });
-      });
-    });
-  }
-  // Simulate fetching unread messages from backend
-  const fetchUnreadMessages = () => {
-    // Replace with actual fetch logic to fetch unread messages from backend
-    // For demo purposes, increment unreadMessages by 1 every 5 seconds
-    setInterval(() => {
-      setUnreadMessages(prevCount => prevCount + 1);
-    }, 5000);
-  };
+  const [installed, setInstalled] = useState(false);
 
   useEffect(() => {
-    // Fetch unread messages when component mounts
-    fetchUnreadMessages();
+    // const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    // if (isMobile) {
+    let installPrompt = null;
+    const installButton = document.querySelector("#install");
+
+    const handleBeforeInstallPrompt = (event) => {
+      event.preventDefault();
+      installPrompt = event;
+      installButton.removeAttribute("hidden");
+      // Show your custom install prompt here
+    };
+
+    const disableInAppInstallPrompt = () => {
+      installPrompt = null;
+      installButton.setAttribute("hidden", "");
+    }
+
+    window.addEventListener("appinstalled", () => {
+      setInstalled(true);
+      disableInAppInstallPrompt();
+    });
+
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+
+    installButton.addEventListener("click", async () => {
+      if (!installPrompt) {
+        return;
+      }
+      const result = await installPrompt.prompt();
+      console.log(`Install prompt was: ${result.outcome}`);
+      disableInAppInstallPrompt();
+    });
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+    // }
   }, []);
 
   useEffect(() => {
+    if (installed) {
+      // Simulate fetching unread messages from backend
+      const interval = setInterval(() => {
+        // Replace this with actual fetch logic to get unread messages count
+        const randomCount = Math.floor(Math.random() * 10); // Random number for demo
+        setUnreadMessages(randomCount);
+      }, 5000); // Fetch every 5 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [installed]);
+
+  useEffect(() => {
     // Update document title with unread messages count
-    document.title = unreadMessages > 0 ? `(${unreadMessages}) PWA Badge` : `PWA Badge`;
+    document.title = unreadMessages > 0 ? `(${unreadMessages}) Unread Messages` : 'PWA Badge Sample';
   }, [unreadMessages]);
+
+  const handleBadgeClick = () => {
+    // Handle click on badge (e.g., mark messages as read)
+    setUnreadMessages(0);
+  };
 
   return (
     <div className="App">
@@ -63,11 +79,17 @@ function App() {
         <p>
           Welcome to the PWA Badge Sample!
         </p>
-        <p>
-          Unread Messages: {unreadMessages}
-        </p>
+        <button id="install" hidden>Do you want to Install?</button>
+        {installed ?
+          <>
+            <button onClick={handleBadgeClick}>Mark as Read</button>
+            <p>
+              Unread Messages: {unreadMessages}
+            </p>
+          </> :
+          <></>}
       </header>
-    </div>
+    </div >
   );
 }
 

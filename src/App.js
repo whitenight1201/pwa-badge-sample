@@ -24,10 +24,10 @@ function App() {
     const disableInAppInstallPrompt = () => {
       installPrompt = null;
       installButton.setAttribute("hidden", "");
+      setInstalled(true);
     }
 
     window.addEventListener("appinstalled", () => {
-      setInstalled(true);
       disableInAppInstallPrompt();
     });
 

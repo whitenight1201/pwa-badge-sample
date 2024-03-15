@@ -65,6 +65,11 @@ function App() {
   useEffect(() => {
     // Update document title with unread messages count
     document.title = unreadMessages > 0 ? `(${unreadMessages}) Unread Messages` : 'PWA Badge Sample';
+
+    // Update badge count on the app icon (if supported)
+    if ('setAppBadge' in navigator) {
+      navigator.setAppBadge(unreadMessages);
+    }
   }, [unreadMessages]);
 
   const handleBadgeClick = () => {

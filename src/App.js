@@ -47,7 +47,7 @@ function App() {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
     // }
-  }, []);
+  }, [installed]);
 
   useEffect(() => {
     if (installed) {
